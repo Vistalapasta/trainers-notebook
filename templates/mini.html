@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trainer's Notebook · mini</title>
+<link rel="stylesheet" href="/static/comum.css">
+<link rel="icon" href="/static/icone-256.png">
+<script>
+  // Aparência escolhida em ⓘ > Aparência (sem escolha, segue o Windows). Aplicada antes de desenhar, sem piscar.
+  try { const t = localStorage.getItem("tema"); if (t) document.documentElement.dataset.tema = t; } catch {}
+</script>
+<style>
+  body { font-size: 13px; }
+  header { position: sticky; top: 0; z-index: 1; display: flex; gap: 6px; align-items: center; padding: 8px 10px; background: var(--topo-fundo); border-bottom: 2px solid var(--topo-borda); }
+  header input { flex: 1; min-width: 0; padding: 5px 8px; }
+  header a { font-size: 12px; white-space: nowrap; }
+  #alertas { padding: 8px 10px; border-bottom: 1px solid var(--borda); background: var(--painel); }
+  #alertas:empty { display: none; }
+  .alerta { padding: 5px 0; border-bottom: 1px dashed var(--borda); }
+  .alerta:last-of-type { border-bottom: 0; }
+  .alerta small { color: var(--suave); }
+  .alerta.otimo b { color: var(--otimo); }
+  .alerta.alvo b { color: var(--acento); }
+  .acoes-alerta { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+  button { padding: 3px 9px; font-size: 12px; }
+  ul { list-style: none; margin: 8px; padding: 2px 0; background: var(--painel-fundo); background-color: var(--painel); border: var(--painel-borda); border-radius: var(--raio); box-shadow: var(--painel-sombra); }
+  li:last-child { border-bottom: 0; }
+  li { padding: 7px 10px; border-bottom: 1px solid var(--borda); }
+  li .topo { display: flex; justify-content: space-between; gap: 6px; align-items: center; }
+  li .nome { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  li .valores { color: var(--suave); font-variant-numeric: tabular-nums; margin-top: 2px; }
+  li .valores b { color: var(--texto); font-weight: 600; }
+  .vazio { color: var(--suave); padding: 20px; text-align: center; }
+</style>
+</head>
+<body>
+<header>
+  <input id="busca" placeholder="Buscar item…" autocomplete="off">
+  <button class="sec" id="btn-fixar" hidden title="Deixar esta janela sempre na frente das outras (não mexe no jogo)">📌 Fixada</button>
+  <a href="/" target="_blank" id="link-app" title="Abrir o app completo">App ↗</a>
+</header>
+<section id="alertas"></section>
+<ul id="lista"></ul>
+
+<script src="/static/comum.js"></script>
+<script>
+let itens = [];
+
+// Itens com sinal mais abaixo da média primeiro; sem dados suficientes, no fim
+function ordenar(lista) {
+  const temSinal = i => i.diff30 != null && i.sinal !== "poucos dados";
+  return lista.sort((a, b) => temSinal(b) - temSinal(a) || (temSinal(a) ? a.diff30 - b.diff30 : a.nome.localeCompare(b.nome, "pt-BR")));
+}
+
+function desenharLista() {
+  const busca = $("#busca").value.trim().toLowerCase();
+  const lista = ordenar(itens.filter(i => i.registros && (!busca || i.nome.toLowerCase().includes(busca))));
+  $("#lista").innerHTML = lista.map(i => `
+    <li>
+      <div class="topo"><span class="nome">${i.alvo != null ? "🎯 " : ""}${esc(i.nome)}</span>${selo(i)}</div>
+      <div class="valores">menor <b>${fmt(i.atual)}</b> · mercado <b>${fmt(i.mercado_atual)}</b> · média 30d ${fmt(i.media30)}${i.alvo != null ? ` · alvo ${fmt(i.alvo)}` : ""}</div>
+    </li>`).join("") || `<li class="vazio">${busca ? "Nenhum item encontrado." : "Nenhum preço registrado ainda."}</li>`;
+}
+
+async function carregarItens() {
+  try { itens = await api("/api/itens"); desenharLista(); } catch {}
+}
+
+async function desenharAlertas(naoLidos) {
+  if (!naoLidos) { $("#alertas").innerHTML = ""; return; }
+  const { alertas } = await api("/api/alertas");
+  const lista = alertas.filter(a => !a.lido).slice(0, 5);
+  $("#alertas").innerHTML = lista.map(a => `
+    <div class="alerta ${a.tipo}"><b>${ICONE_ALERTA[a.tipo] || "•"}</b> ${esc(a.mensagem)}
+      <br><small>${new Date(a.criado_em.replace(" ", "T")).toLocaleString("pt-BR")}</small></div>`).join("") + `
+    <div class="acoes-alerta"><small>${naoLidos} não lido(s)</small><button class="sec" id="btn-lidos">Marcar como lidos</button></div>`;
+}
+
+$("#busca").addEventListener("input", desenharLista);
+$("#alertas").addEventListener("click", async e => {
+  if (e.target.id === "btn-lidos") { await api("/api/alertas/lidos", { method: "POST" }); desenharAlertas(0); }
+});
+
+let naoLidosAtual = -1;
+vigiarAlertas((naoLidos, houveNovos) => {
+  if (houveNovos) carregarItens();
+  if (houveNovos || naoLidos !== naoLidosAtual) { naoLidosAtual = naoLidos; desenharAlertas(naoLidos); }
+});
+carregarItens();
+setInterval(carregarItens, 15000);
+
+// Versão desktop: a janela mini começa sempre por cima; o botão liga e desliga. "App" volta para a janela principal.
+window.addEventListener("pywebviewready", () => {
+  let fixada = true;
+  $("#btn-fixar").hidden = false;
+  $("#btn-fixar").addEventListener("click", async () => {
+    fixada = await window.pywebview.api.por_cima(!fixada);
+    $("#btn-fixar").textContent = fixada ? "📌 Fixada" : "📌 Fixar";
+  });
+  $("#link-app").addEventListener("click", e => { e.preventDefault(); window.pywebview.api.mostrar_principal(); });
+});
+</script>
+</body>
+</html>

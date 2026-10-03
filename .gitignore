@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+capturas/
+precos.db
+*.bak
+ferramentas/pokeapi/
+ferramentas/wiki/*.xml
+ferramentas/pmd/
+*:Zone.Identifier
+dist/

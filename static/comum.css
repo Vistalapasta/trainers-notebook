@@ -1,0 +1,65 @@
+/* Cores e estilos básicos usados pela página principal e pelo modo mini */
+/* Fonte (static/fontes, licença OFL): Atkinson Hyperlegible em tudo. */
+@font-face { font-family: "Atkinson Hyperlegible"; font-weight: 400; font-display: swap; src: url(/static/fontes/atkinson-hyperlegible-latin-400-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Atkinson Hyperlegible"; font-weight: 400; font-display: swap; src: url(/static/fontes/atkinson-hyperlegible-latin-ext-400-normal.woff2) format("woff2"); unicode-range: U+0100-02AF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Atkinson Hyperlegible"; font-weight: 700; font-display: swap; src: url(/static/fontes/atkinson-hyperlegible-latin-700-normal.woff2) format("woff2"); unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Atkinson Hyperlegible"; font-weight: 700; font-display: swap; src: url(/static/fontes/atkinson-hyperlegible-latin-ext-700-normal.woff2) format("woff2"); unicode-range: U+0100-02AF, U+1E00-1EFF, U+2020, U+20A0-20AB, U+20AD-20CF, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+@font-face { font-family: "Atkinson Hyperlegible"; font-weight: 400; font-style: italic; font-display: swap; src: url(/static/fontes/atkinson-hyperlegible-latin-400-italic.woff2) format("woff2"); }
+
+/* Caderno de campo, em duas versões. Claro: papel quadriculado azulado com a linha vermelha de margem, tinta azul e
+   marca-texto amarelo no sinal "ótimo". Noturno: o mesmo caderno em papel azul-escuro, tinta clara. Segue o Windows
+   (claro/escuro), ou o escolhido em ⓘ > Aparência (data-tema no <html>). */
+:root {
+  --bg: #E8EEF6; --painel: #F8FAFD; --borda: #C4D1E2; --texto: #1B2A4A; --suave: #586B8C;
+  --acento: #2F5DA8; --no-acento: #FFFFFF; --otimo: #1F7A4D; --bom: #5B8A1E; --normal: #586B8C; --caro: #C33A3F;
+  --linha-preco: #2F5DA8; --linha-m7: #D08A12; --linha-m30: #7A55C8; --linha-min: #1F7A4D; --linha-max: #C33A3F; --print-barata: #0E7C93; --print-cara: #B8336A; --fora: #C46A12;
+  --painel-fundo: #F8FAFD; --painel-borda: 1px solid #B7C6DA; --painel-sombra: none; --raio: 4px;
+  --topo-fundo: #F8FAFD; --topo-borda: #B7C6DA;
+  --fundo-imagem: linear-gradient(90deg, transparent 9px, #E3A0A4 9px, #E3A0A4 11px, transparent 11px),
+                  linear-gradient(#D6E0EC 1px, transparent 1px), linear-gradient(90deg, #D6E0EC 1px, transparent 1px);
+  --fundo-tamanho: auto, 22px 22px, 22px 22px;
+  --fonte-titulo: "Atkinson Hyperlegible", system-ui, sans-serif; --peso-titulo: 700;
+  --marca: #FFE36E; --marca-texto: var(--otimo); --marca-ini: 30%; --marca-fim: 85%;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-tema="caderno"]) {
+  --bg: #172033; --painel: #1D283D; --borda: #33425E; --texto: #E6ECF5; --suave: #9AA9C2;
+  --acento: #8CB4FF; --no-acento: #172033; --otimo: #74D9A0; --bom: #B9DC78; --normal: #9AA9C2; --caro: #FF8A8E;
+  --linha-preco: #8CB4FF; --linha-m7: #F0C062; --linha-m30: #C3A6FF; --linha-min: #74D9A0; --linha-max: #FF8A8E; --print-barata: #6FD8E8; --print-cara: #FF9CC8; --fora: #FFAE6B;
+  --painel-fundo: #1D283D; --painel-borda: 1px solid #3A4A68; --painel-sombra: none; --raio: 4px;
+  --topo-fundo: #1D283D; --topo-borda: #3A4A68;
+  --fundo-imagem: linear-gradient(90deg, transparent 9px, #8E4B55 9px, #8E4B55 11px, transparent 11px),
+                  linear-gradient(#222D44 1px, transparent 1px), linear-gradient(90deg, #222D44 1px, transparent 1px);
+  --fundo-tamanho: auto, 22px 22px, 22px 22px;
+  --fonte-titulo: "Atkinson Hyperlegible", system-ui, sans-serif; --peso-titulo: 700;
+  --marca: #F5D65E; --marca-texto: #172033; --marca-ini: 0%; --marca-fim: 100%;
+  color-scheme: dark;
+} }
+:root[data-tema="noite"] {
+  --bg: #172033; --painel: #1D283D; --borda: #33425E; --texto: #E6ECF5; --suave: #9AA9C2;
+  --acento: #8CB4FF; --no-acento: #172033; --otimo: #74D9A0; --bom: #B9DC78; --normal: #9AA9C2; --caro: #FF8A8E;
+  --linha-preco: #8CB4FF; --linha-m7: #F0C062; --linha-m30: #C3A6FF; --linha-min: #74D9A0; --linha-max: #FF8A8E; --print-barata: #6FD8E8; --print-cara: #FF9CC8; --fora: #FFAE6B;
+  --painel-fundo: #1D283D; --painel-borda: 1px solid #3A4A68; --painel-sombra: none; --raio: 4px;
+  --topo-fundo: #1D283D; --topo-borda: #3A4A68;
+  --fundo-imagem: linear-gradient(90deg, transparent 9px, #8E4B55 9px, #8E4B55 11px, transparent 11px),
+                  linear-gradient(#222D44 1px, transparent 1px), linear-gradient(90deg, #222D44 1px, transparent 1px);
+  --fundo-tamanho: auto, 22px 22px, 22px 22px;
+  --fonte-titulo: "Atkinson Hyperlegible", system-ui, sans-serif; --peso-titulo: 700;
+  --marca: #F5D65E; --marca-texto: #172033; --marca-ini: 0%; --marca-fim: 100%;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { margin: 0; font: 14px/1.45 "Atkinson Hyperlegible", system-ui, sans-serif; background-color: var(--bg); background-image: var(--fundo-imagem); background-size: var(--fundo-tamanho); background-attachment: fixed; color: var(--texto); }
+h1, h2, h3 { font-family: var(--fonte-titulo); font-weight: var(--peso-titulo); }
+.nota { color: var(--texto); }
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+a { color: var(--acento); }
+input { font: inherit; padding: 7px 9px; border: 1px solid var(--borda); border-radius: var(--raio); background: var(--bg); color: var(--texto); }
+input:focus { outline: 2px solid var(--acento); outline-offset: -1px; }
+button { font: inherit; padding: 7px 14px; border: 0; border-radius: var(--raio); background: var(--acento); color: var(--no-acento); font-weight: 700; cursor: pointer; }
+button.sec { background: transparent; color: var(--suave); border: 1px solid var(--borda); font-weight: 400; }
+.badge { font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 10px; border: 1px solid currentColor; }
+/* "ótimo" grifado com marca-texto */
+.badge.s-ótimo { color: var(--marca-texto); background: linear-gradient(transparent var(--marca-ini), var(--marca) var(--marca-ini), var(--marca) var(--marca-fim), transparent var(--marca-fim)); }
+.s-ótimo { color: var(--otimo); } .s-bom { color: var(--bom); } .s-normal, .s-poucos { color: var(--normal); } .s-caro { color: var(--caro); }
+.aviso-fora { color: var(--fora); font-weight: 600; }

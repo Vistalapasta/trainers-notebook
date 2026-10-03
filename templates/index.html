@@ -1,0 +1,1247 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Trainer's Notebook</title>
+<link rel="stylesheet" href="/static/comum.css">
+<link rel="icon" href="/static/icone-256.png">
+<script>
+  // Aparência escolhida em ⓘ > Aparência (sem escolha, segue o Windows). Aplicada antes de desenhar, sem piscar.
+  try { const t = localStorage.getItem("tema"); if (t) document.documentElement.dataset.tema = t; } catch {}
+</script>
+<style>
+  header { display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; border-bottom: 2px solid var(--topo-borda); background: var(--topo-fundo); }
+  header h1 { font-size: 21px; margin: 0; letter-spacing: .01em; }
+  .acoes-topo { position: relative; display: flex; gap: 10px; align-items: center; }
+  .acoes-topo button { padding: 5px 10px; }
+  #n-alertas:not(:empty) { background: var(--caro); color: #fff; border-radius: 9px; padding: 0 6px; font-size: 11px; font-weight: 600; }
+  .popup { position: absolute; right: 0; top: 38px; z-index: 5; max-height: 70vh; overflow: auto; background: var(--painel-fundo); background-color: var(--painel); border: var(--painel-borda); border-radius: var(--raio); padding: 12px 16px; box-shadow: var(--painel-sombra), 0 10px 28px rgb(0 0 0 / .25); font-size: 13px; }
+  #painel-creditos, #painel-sobre { width: min(640px, 90vw); } #painel-apoiar { width: min(400px, 90vw); }
+  .popup h3 { font-size: 14px; margin: 4px 0 8px; }
+  .popup p { margin: 8px 0; }
+  .popup ul { margin: 6px 0; padding-left: 18px; }
+  .popup a { color: inherit; }
+  #painel-alertas { position: absolute; right: 0; top: 38px; z-index: 5; width: 380px; max-height: 420px; overflow: auto; background: var(--painel-fundo); background-color: var(--painel); border: var(--painel-borda); border-radius: var(--raio); padding: 12px; box-shadow: var(--painel-sombra), 0 10px 28px rgb(0 0 0 / .25); }
+  #painel-alertas .alerta { padding: 6px 0; border-bottom: 1px dashed var(--borda); font-size: 13px; }
+  #painel-alertas .alerta.nao-lido { font-weight: 600; }
+  #painel-alertas small { color: var(--suave); font-weight: 400; }
+  #painel-alertas .rodape { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--suave); }
+  .alvo { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12px; color: var(--suave); margin-bottom: 10px; }
+  .alvo input { width: 110px; padding: 4px 8px; }
+  .alvo button { padding: 4px 10px; font-size: 12px; }
+  main { padding: 16px 20px; display: grid; gap: 16px; grid-template-columns: minmax(440px, 1fr) minmax(0, 2fr); }
+  main > * { min-width: 0; }
+  .painel { overflow-x: auto; }
+  @media (max-width: 1000px) { main { grid-template-columns: 1fr; } }
+  .painel { background: var(--painel-fundo); background-color: var(--painel); border: var(--painel-borda); border-radius: var(--raio); box-shadow: var(--painel-sombra); padding: 16px 18px; }
+  .painel h2 { font-size: 18px; margin: 0 0 12px; }
+  #lancamento { grid-column: 1 / -1; }
+  form.linha { display: flex; gap: 8px; flex-wrap: wrap; align-items: end; }
+  label { display: flex; flex-direction: column; gap: 3px; font-size: 12px; color: var(--suave); }
+  button.del { background: transparent; color: var(--caro); padding: 2px 8px; font-weight: 400; }
+  .msg { font-size: 12px; margin-top: 6px; min-height: 16px; }
+  .msg.erro { color: var(--caro); } .msg.ok { color: var(--otimo); }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--borda); white-space: nowrap; }
+  th { font-size: 12px; color: var(--suave); font-weight: 500; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  #tabela-itens tbody tr { cursor: pointer; }
+  #tabela-itens th, #tabela-itens td { padding: 6px 4px; } #tabela-itens th:first-child, #tabela-itens td:first-child { padding-left: 8px; }
+  #tabela-itens tbody tr.grupo { cursor: pointer; background: transparent; user-select: none; }
+  #tabela-itens tr.grupo .qtd { font-weight: 400; text-transform: none; }
+  #tabela-itens tr.grupo td { padding-top: 14px; font-size: 13px; font-weight: 700; color: var(--suave); }
+  .topo-lista select { font: inherit; padding: 7px 9px; border: 1px solid var(--borda); border-radius: 6px; background: var(--bg); color: var(--texto); }
+  #tabela-itens tbody tr:hover { background: var(--bg); }
+  #tabela-itens tbody tr.sel { background: color-mix(in srgb, var(--acento) 15%, transparent); }
+  .cat { font-size: 11px; color: var(--suave); }
+  .topo-lista { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+  .topo-lista input { flex: 1 1 160px; min-width: 0; }
+  #novo-item { display: none; margin-bottom: 10px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .card { border: 1px solid var(--borda); border-radius: 6px; padding: 8px 10px; }
+  .card span { display: block; font-size: 11px; color: var(--suave); }
+  .card b { font-size: 18px; font-variant-numeric: tabular-nums; }
+  .cab-detalhe { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; }
+  .periodos button { padding: 4px 10px; font-size: 12px; }
+  .periodos button.ativo { background: var(--acento); color: var(--no-acento); border-color: var(--acento); }
+  .grafico { position: relative; height: 320px; }
+  .camadas { font-size: 12px; color: var(--suave); margin-bottom: 6px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+  #times { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .time-item { display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 10px; text-align: left; background: transparent; color: var(--texto); border: 1px solid var(--borda); border-radius: 8px; padding: 8px 10px; font: inherit; cursor: pointer; }
+  .time-item:hover { border-color: var(--acento); }
+  .time-item.sel { border-color: var(--acento); background: color-mix(in srgb, var(--acento) 10%, transparent); }
+  .time-item .retratos { grid-column: 1 / -1; min-height: 24px; display: flex; gap: 2px; }
+  .time-item .retrato-mini { margin: 0; }
+  .time-item .dica { justify-self: end; }
+  .cab-time { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  #nome-time { font-size: 16px; font-weight: 600; flex: 1 1 200px; }
+  .total-time b { color: var(--acento); }
+  .aviso-preco { margin: 4px 0 10px; }
+  .vagas { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; margin-bottom: 10px; }
+  .vaga { border: 1px solid var(--borda); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; min-height: 120px; }
+  .vaga.vazia { border-style: dashed; justify-content: center; align-items: center; }
+  .vaga.vazia input { width: 100%; }
+  .cab-membro { display: flex; gap: 8px; align-items: center; }
+  .cab-membro > div { flex: 1; }
+  .cab-membro .tipo:first-child { margin-left: 0; }
+  .retrato-membro { width: 48px; height: 48px; image-rendering: pixelated; border-radius: 6px; border: 1px solid var(--borda); }
+  .linha-held { display: flex; gap: 6px; align-items: center; }
+  .linha-held input { flex: 1; min-width: 0; padding: 4px 8px; }
+  .linha-held button { padding: 3px 8px; font-size: 12px; }
+  .pais { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; margin-bottom: 12px; }
+  .pai { border: 1px solid var(--borda); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .linha-pai { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .linha-pai input:not([type=checkbox]) { flex: 1; min-width: 0; }
+  .pai select, .pai input:not([type=checkbox]) { padding: 4px 8px; }
+  .pai-info { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; min-height: 24px; font-size: 12px; }
+  .pai-info .tipo:first-child { margin-left: 0; }
+  label.check { flex-direction: row; align-items: center; gap: 4px; color: var(--texto); }
+  .veredito { font-size: 18px; font-family: var(--fonte-titulo); font-weight: var(--peso-titulo); }
+  .aviso-breeding { border: 1px solid var(--fora); border-left-width: 4px; border-radius: 6px; padding: 8px 10px; margin-bottom: 10px; font-size: 13px;
+    background: color-mix(in srgb, var(--fora) 10%, transparent); color: var(--texto); }
+  .regras { margin: 6px 0 10px; padding-left: 18px; font-size: 13px; }
+  .regras li.sobe { color: var(--otimo); list-style: none; margin-left: -14px; } .regras li.desce { color: var(--caro); list-style: none; margin-left: -14px; }
+  #resultado-casal > div { margin: 6px 0; }
+  .nasce { display: flex; gap: 8px; align-items: center; font-size: 15px; }
+  button.link { background: none; border: none; padding: 0; color: var(--acento); font: inherit; font-weight: 600; cursor: pointer; text-decoration: underline; }
+  .grupo-ovo { margin-top: 10px; } .grupo-ovo summary { cursor: pointer; }
+  #day-care h3 { margin: 14px 0 6px; font-size: 14px; }
+  #tabela-ovos td, #tabela-ovos th { padding: 4px 10px; }
+  .contador-ovos { display: flex; gap: 10px; align-items: center; } .contador-ovos b { font-size: 24px; min-width: 32px; text-align: center; }
+  .barra { height: 6px; background: var(--borda); border-radius: 3px; margin: 8px 0 4px; overflow: hidden; }
+  #barra-ovos { height: 100%; background: var(--acento); width: 0; }
+  .cobertura { font-size: 13px; margin-bottom: 10px; padding: 8px 12px; border: 1px solid var(--borda); border-radius: 8px; }
+  .cobertura summary { cursor: pointer; }
+  .cobertura summary b { margin-right: 4px; }
+  .cobertura > div { margin: 6px 0 0 14px; }
+  .cobertura > div.dica { font-size: 12px; }
+  .cab-membro button.sec { padding: 3px 8px; font-size: 12px; }
+  .linha-held select { flex: 1; min-width: 0; font: inherit; padding: 4px 6px; border: 1px solid var(--borda); border-radius: 6px; background: var(--bg); color: var(--texto); }
+  .tms-membro { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; }
+  .tms-membro .move button.del { padding: 0 2px; font-size: 11px; }
+  .tms-membro select { font: inherit; font-size: 12px; padding: 3px 6px; border: 1px solid var(--borda); border-radius: 12px; background: var(--bg); color: var(--texto); max-width: 100%; }
+  .sem-preco { font-size: 11px; color: var(--suave); font-style: italic; }
+  .vaga .preco { color: var(--otimo); font-weight: 600; font-size: 12px; font-variant-numeric: tabular-nums; }
+  .padrao { margin-top: 14px; }
+  .padrao h3 { font-size: 15px; margin: 0 0 4px; }
+  .grade-padrao { display: grid; grid-template-columns: repeat(auto-fit, minmax(64px, 1fr)); gap: 6px; margin: 8px 0; }
+  .grade-padrao div { border: 1px solid var(--borda); border-radius: 6px; padding: 5px 4px; text-align: center; display: flex; flex-direction: column; font-variant-numeric: tabular-nums; }
+  .grade-padrao span { font-size: 11px; color: var(--suave); }
+  .grade-padrao small { font-size: 10px; color: var(--suave); }
+  .grade-padrao .barato { border-color: var(--otimo); } .grade-padrao .barato b { color: var(--otimo); }
+  .grade-padrao .caro { border-color: var(--caro); } .grade-padrao .caro b { color: var(--caro); }
+  .grade-padrao .pouco b { color: var(--suave); font-weight: 400; }
+  #historico { max-height: 260px; overflow: auto; margin-top: 12px; }
+  .vazio { color: var(--suave); padding: 30px; text-align: center; }
+  .dica { font-size: 12px; color: var(--suave); }
+  #zona-print { margin-top: 12px; padding: 14px; border: 2px dashed var(--borda); border-radius: 8px; color: var(--suave); text-align: center; }
+  #zona-print.arrastando { border-color: var(--acento); color: var(--texto); }
+  .auto-clip { display: inline-flex; flex-direction: row; align-items: center; gap: 6px; font-size: 12px; cursor: pointer; }
+  .link-arquivo { display: inline; font-size: inherit; color: var(--acento); text-decoration: underline; cursor: pointer; }
+  #conferencia { margin-top: 12px; }
+  #conferencia .cols { display: flex; gap: 16px; flex-wrap: wrap; align-items: flex-start; }
+  #conferencia img { max-width: 420px; max-height: 260px; border: 1px solid var(--borda); border-radius: 6px; }
+  #conferencia table input { width: 110px; padding: 4px 6px; }
+  #conferencia tr.menor td { font-weight: 600; }
+  #conferencia tr.fora td { opacity: .45; }
+  #historico tr.fora-curva td { opacity: .55; }
+  #historico tr.fora-curva td.acoes { opacity: 1; }
+  #historico select { font: inherit; font-size: 12px; padding: 2px 4px; border: 1px solid var(--borda); border-radius: 4px; background: var(--bg); color: var(--texto); }
+  #natures, #tms, #helds { grid-column: 1 / -1; }
+  #helds .topo-lista input { flex: 0 1 320px; }
+  #tms .topo-lista input { flex: 0 1 320px; }
+  .lista-tms { display: flex; gap: 6px; flex-wrap: wrap; }
+  .lista-tms button.move, .aprendem button { cursor: pointer; background: transparent; color: var(--texto); font: inherit; font-size: 12px; }
+  .lista-tms button.move:hover, .aprendem button:hover { border-color: var(--acento); }
+  .move .cod { color: var(--suave); font-variant-numeric: tabular-nums; }
+  .move .preco { color: var(--otimo); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .aprendem { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+  .aprendem button { padding: 3px 10px; border: 1px solid var(--borda); border-radius: 12px; }
+  main[hidden] { display: none; }
+  .titulo { display: flex; align-items: center; gap: 18px; }
+  .abas { display: flex; gap: 4px; }
+  .abas button { background: transparent; color: var(--suave); padding: 6px 12px; border-radius: var(--raio); font-weight: 400; }
+  .abas button:hover { background: var(--bg); }
+  .abas button.ativa { background: color-mix(in srgb, var(--acento) 18%, transparent); color: var(--texto); font-weight: 700; }
+  .subabas { display: flex; gap: 4px; padding: 6px 20px; border-bottom: 1px solid var(--borda); background: var(--topo-fundo); }
+  .subabas[hidden] { display: none; }
+  .subabas button { background: transparent; color: var(--suave); padding: 4px 12px; border-radius: var(--raio); font-size: 13px; font-weight: 400; }
+  .subabas button:hover { background: var(--bg); }
+  .subabas button.ativa { color: var(--texto); font-weight: 700; box-shadow: inset 0 -2px var(--acento); border-radius: 0; }
+  #menu-info { width: 180px; padding: 4px; }
+  #menu-info button, #menu-info a { display: block; box-sizing: border-box; text-decoration: none; width: 100%; text-align: left; background: transparent; color: var(--texto); padding: 7px 10px; font-weight: 400; }
+  #menu-info button:hover, #menu-info a:hover { background: var(--bg); }
+  #btn-apoiar { background: transparent; color: var(--suave); padding: 5px 6px; font-size: 13px; font-weight: 400; }
+  #btn-apoiar:hover { color: var(--caro); }
+  #aviso-versao { color: var(--acento); font-size: 13px; padding: 5px 6px; text-decoration: none; }
+  #aviso-versao:hover { text-decoration: underline; }
+  .chave-pix { display: flex; gap: 8px; align-items: center; }
+  .chave-pix code { flex: 1; padding: 6px 8px; background: var(--bg); border: 1px solid var(--borda); border-radius: 6px; font-size: 12px; user-select: all; overflow-wrap: anywhere; }
+  .chave-pix button { padding: 5px 10px; font-size: 12px; }
+  .link-exportar { font-size: 12px; color: var(--suave); }
+  #painel-cronometros { width: min(400px, 90vw); }
+  #btn-crono.rodando { color: var(--acento); border-color: var(--acento); font-variant-numeric: tabular-nums; }
+  .crono { display: flex; align-items: center; gap: 8px; padding: 6px 0; border-bottom: 1px dashed var(--borda); }
+  .crono .nome { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .crono .tempo { font-variant-numeric: tabular-nums; color: var(--suave); }
+  .crono .tempo.rodando { color: var(--acento); font-weight: 600; } .crono .tempo.acabou { color: var(--otimo); font-weight: 600; }
+  .crono button { padding: 3px 9px; font-size: 12px; }
+  #form-crono { display: flex; gap: 6px; align-items: end; flex-wrap: wrap; margin-top: 10px; }
+  #form-crono input { padding: 5px 7px; } #form-crono .num { width: 58px; }
+  details.recolher > summary { cursor: pointer; list-style: none; font-size: 13px; color: var(--suave); }
+  details.recolher > summary::before { content: "▸ "; } details.recolher[open] > summary::before { content: "▾ "; }
+  details.recolher > summary b { color: var(--texto); }
+  .volume { margin-top: 14px; }
+  .volume .grafico { height: 160px; margin-top: 8px; }
+  #padrao-geral { grid-column: 1 / -1; }
+  #quests-filtros { margin-bottom: 10px; }
+  #quests-filtros select { font: inherit; padding: 7px 9px; border: 1px solid var(--borda); border-radius: 6px; background: var(--bg); color: var(--texto); }
+  #quests-lista td.premio { white-space: normal; min-width: 260px; }
+  #quests-lista td { vertical-align: top; }
+  #quests-lista tr.feita td { color: var(--suave); } #quests-lista tr.feita a { color: var(--suave); }
+  #quests-lista tr.longe td { opacity: .5; }
+  #quests-lista a { color: var(--texto); text-decoration: none; } #quests-lista a:hover { text-decoration: underline; }
+  #lista-farms { display: flex; flex-direction: column; gap: 6px; }
+  #lista-farms .time-item { grid-template-columns: 1fr auto; }
+  #lista-farms .time-item .dica:nth-of-type(2) { justify-self: start; }
+  #ranking-farm table { margin-bottom: 4px; }
+  .titulo-sessoes, #editor-farm h3 { font-size: 15px; margin: 16px 0 6px; }
+  .tabela-farm td { padding: 4px 6px; }
+  .tabela-farm input { padding: 4px 7px; width: 100%; min-width: 160px; }
+  .tabela-farm input.qtd { width: 80px; min-width: 0; } .tabela-farm input.npc { width: 90px; min-width: 0; }
+  .tabela-farm tr.nova td { border-bottom: 0; }
+  .duracao { display: flex; gap: 4px; align-items: center; color: var(--texto); }
+  .duracao input { width: 60px; }
+  .negativo { color: var(--caro) !important; }
+  #padrao-geral > summary { font-size: 15px; }
+  #padrao-geral > summary h2 { display: inline; font-size: 15px; color: var(--texto); }
+  #natures .topo-lista input { flex: 0 1 280px; }
+  .stats-base { display: flex; gap: 6px; flex-wrap: wrap; margin: 10px 0 12px; }
+  .stats-base .card { min-width: 70px; text-align: center; }
+  .stats-base .card.sobe { border-color: var(--otimo); } .stats-base .card.sobe b { color: var(--otimo); }
+  .stats-base .card.desce { border-color: var(--caro); } .stats-base .card.desce b { color: var(--caro); }
+  .tipo { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 10px; background: var(--bg); border: 1px solid var(--borda); margin-left: 4px; }
+  #natures td.nat { font-weight: 600; }
+  #natures tr.principal td { background: color-mix(in srgb, var(--acento) 10%, transparent); }
+  #natures td.sobe { color: var(--otimo); } #natures td.desce { color: var(--caro); }
+  #natures td.porque { white-space: normal; color: var(--suave); font-size: 12px; }
+  .motivos { list-style: none; padding: 0; margin: 0 0 12px; font-size: 13px; }
+  .motivos li { padding: 2px 0; }
+  .motivos b { display: inline-block; width: 26px; color: var(--suave); } .motivos b.sobe { color: var(--otimo); } .motivos b.desce { color: var(--caro); }
+  #natures h3 { font-size: 15px; margin: 18px 0 8px; }
+  .tipagem { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  .tipagem caption { text-align: left; font-size: 12px; color: var(--suave); padding-bottom: 4px; }
+  .tipagem th { width: 90px; vertical-align: top; padding-top: 9px; }
+  .tipagem td { white-space: normal; line-height: 2; }
+  .tipagem td > div { margin: 0; }
+  .tipo.fraco { color: var(--caro); border-color: currentColor; } .tipo.resiste { color: var(--otimo); border-color: currentColor; }
+  .moves { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+  .move { font-size: 12px; padding: 3px 8px 3px 4px; border: 1px solid var(--borda); border-radius: 12px; display: inline-flex; gap: 5px; align-items: center; }
+  .move i { font-style: normal; font-size: 10px; font-weight: 700; width: 16px; height: 16px; border-radius: 50%; display: inline-grid; place-items: center; color: var(--no-acento); }
+  .cabeca { display: flex; align-items: center; gap: 12px; }
+  .cabeca .retrato { width: 80px; height: 80px; image-rendering: pixelated; border-radius: 8px; border: 1px solid var(--borda); }
+  .sprite { image-rendering: pixelated; background-repeat: no-repeat; flex: none; }
+  .credito { font-size: 11px; color: var(--suave); margin-top: 6px; }
+  .credito a { color: inherit; }
+  .retrato-mini { width: 24px; height: 24px; image-rendering: pixelated; border-radius: 4px; vertical-align: middle; margin: -2px 6px -2px -6px; }
+  .artistas { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--suave); }
+  .cat-F { background: var(--caro); } .cat-E { background: var(--acento); } .cat-S { background: var(--normal); }
+</style>
+</head>
+<body>
+<header>
+  <div class="titulo">
+    <h1>Trainer's Notebook</h1>
+    <nav class="abas">
+      <button data-grupo="mercado" class="ativa">Mercado</button>
+      <button data-grupo="pokemon">Pokémon</button>
+      <button data-grupo="jogo">Jogo</button>
+    </nav>
+  </div>
+  <div class="acoes-topo">
+    <a id="aviso-versao" target="_blank" rel="noopener" hidden></a>
+    <button id="btn-apoiar" title="Apoiar o programa (opcional)">♥ Apoiar</button>
+    <button class="sec" id="btn-info" title="Sobre e créditos">ⓘ</button>
+    <button class="sec" id="btn-crono" title="Cronômetros: você inicia e o app avisa quando acabar">⏱</button>
+    <button class="sec" id="btn-sino" title="Alertas">🔔 <span id="n-alertas"></span></button>
+    <button class="sec" id="btn-mini" title="Janela compacta para deixar por cima do jogo">Modo mini</button>
+    <div id="menu-info" class="popup" hidden>
+      <button data-painel="#painel-sobre">Sobre</button>
+      <button data-painel="#painel-creditos">Créditos</button>
+      <a href="{{ formulario }}" target="_blank" rel="noopener" title="Abre um formulário no navegador; não precisa de conta">Enviar problema ou ideia</a>
+      <button id="btn-tema" title="Trocar a aparência">Aparência: <b id="nome-tema"></b></button>
+    </div>
+    <div id="painel-alertas" hidden></div>
+    <div id="painel-cronometros" class="popup" hidden>
+      <h3>Cronômetros</h3>
+      <div id="lista-cronos"></div>
+      <form id="form-crono">
+        <label style="flex:1">Nome <input id="c-nome" required placeholder="ex.: Ovo Rosa, Day Care…" autocomplete="off"></label>
+        <label>Horas <input id="c-h" class="num" type="number" min="0" max="168" value="0"></label>
+        <label>Min <input id="c-m" class="num" type="number" min="0" max="59" value="30"></label>
+        <button type="submit">Adicionar</button>
+      </form>
+      <div class="msg" id="msg-crono"></div>
+      <p class="dica">Você inicia o cronômetro na mão (▶) e o app avisa pelo sino e pela notificação do Windows quando acabar,
+        com a página principal ou o modo mini aberto. Ele não lê nada do jogo.</p>
+    </div>
+    <div id="painel-creditos" class="popup" hidden></div>
+    <div id="painel-sobre" class="popup" hidden>
+      <h3>Sobre o Trainer's Notebook <span class="dica">versão {{ versao }}</span></h3>
+      <p>Caderno de treinador para o otPokemon: acompanha os preços do market a partir dos prints que você tira
+        e ajuda a decidir quando comprar. Tudo em HD (1 HD = 100 dólares do jogo).</p>
+      <ul>
+        <li><b>Mercado</b>, em duas partes:
+          <ul>
+            <li><b>Preços</b>: histórico, preço de mercado, médias, sinal de compra, alertas, volume à venda e quando os itens costumam ficar mais baratos.</li>
+            <li><b>Farm</b>: anote o que dropou e o que gastou em cada caçada e veja o lucro por hora de cada farm.</li>
+          </ul></li>
+        <li><b>Pokémon</b>, em três partes:
+          <ul>
+            <li><b>Busca</b>: ficha dos pokémon (perfil tanque ou atacante, tipagem, nature, TMs e Move Tutor), quem aprende cada golpe e os held items.</li>
+            <li><b>Times</b>: monte até 6 pokémon com held item, nature, TMs e Move Tutor, e veja quanto o time custa.</li>
+            <li><b>Breeding</b>: se um casal pode dar ovo, o que nasce, nature, ball, tempo do ovo e custo do Day Care.</li>
+          </ul></li>
+        <li><b>Jogo</b>: as quests da wiki, com level, premium e prêmio, para marcar as que você já fez.</li>
+        <li><b>⏱ Cronômetros</b>: você inicia e o programa avisa quando o tempo acabar.</li>
+      </ul>
+      <p><b>Programa de fã, não oficial.</b> Não tem ligação com The Pokémon Company, Nintendo, Game Freak ou Creatures,
+        nem com o otPokemon (OTP) ou a sua equipe, e não é mantido nem endossado por eles.</p>
+      <p>Uso conferido com a staff do otPokemon (30/09/2026): sem problema, porque o programa não interage com o jogo.
+        Ele não clica, não aperta teclas, não lê a memória nem os arquivos do jogo, não tira print sozinho
+        e não automatiza nenhuma ação; só lê os prints que o jogador tira. A distribuição gratuita do programa
+        a outros jogadores também foi conferida com a staff, desde que ele continue assim.</p>
+      <p>Achou um erro ou tem uma ideia? Use <a href="{{ formulario }}" target="_blank" rel="noopener">o formulário</a>
+        (ⓘ &gt; Enviar problema ou ideia; não precisa de conta) ou, se tiver conta no GitHub,
+        <a href="{{ repositorio }}/issues" target="_blank" rel="noopener">abra uma issue</a>.</p>
+      <p>O único acesso do programa à internet é, ao abrir, perguntar ao GitHub qual é a última versão publicada,
+        para avisar no topo quando houver uma nova. Ele não baixa nem instala nada sozinho e não manda nenhum dado seu.</p>
+      <p>Serve só para decidir compras dentro do jogo: nada de venda ou troca de itens por dinheiro real.</p>
+      <p>Programa gratuito e de código aberto, com licença não comercial. A versão oficial é a publicada em
+        <a href="{{ repositorio }}" target="_blank" rel="noopener">{{ repositorio.split("//")[1] }}</a>; versões modificadas
+        por outras pessoas não foram conferidas com a staff e podem não seguir as mesmas regras.</p>
+    </div>
+    <div id="painel-apoiar" class="popup" hidden>
+      <h3>Apoiar o programa</h3>
+      <p>O Trainer's Notebook é e sempre vai ser <b>gratuito</b>. Apoiar é totalmente opcional: não libera nenhuma função
+        e não dá nada no jogo (nem HD, nem itens, nem vantagens). A doação ajuda só no desenvolvimento do programa.</p>
+      <p>Se gosta dos retratos e sprites, considere apoiar também quem os fez: os artistas do
+        <a href="https://sprites.pmdcollab.org/" target="_blank" rel="noopener">PMDCollab</a>
+        estão listados em Créditos, com os links de contato de cada um.</p>
+      <p>Para apoiar, faça um Pix de qualquer valor para a chave aleatória:</p>
+      <div class="chave-pix"><code id="chave-pix">3fb15bb3-0a08-4d3a-8c85-33250414ae25</code>
+        <button class="sec" id="btn-copiar-pix">Copiar</button></div>
+      <p class="dica">Obrigado! Qualquer valor ajuda a manter o programa.</p>
+    </div>
+  </div>
+</header>
+<nav class="subabas" id="sub-mercado">
+  <button data-aba="precos">Preços</button>
+  <button data-aba="farm">Farm</button>
+</nav>
+<nav class="subabas" id="sub-jogo" hidden>
+  <button data-aba="quests">Quests</button>
+</nav>
+<nav class="subabas" id="sub-pokemon" hidden>
+  <button data-aba="busca">Busca</button>
+  <button data-aba="times">Times</button>
+  <button data-aba="breeding">Breeding</button>
+</nav>
+
+<main id="aba-precos">
+  <section class="painel" id="lancamento">
+    <h2>Registrar preço</h2>
+    <form class="linha" id="form-preco">
+      <label>Item <input id="f-item" list="lista-itens" required autocomplete="off" style="width:220px"></label>
+      <label>Preço (HD) <input id="f-preco" required autocomplete="off" placeholder="ex: 45, 7480, 1,5k" style="width:160px"></label>
+      <label>Qtd <input id="f-qtd" type="number" min="1" value="1" style="width:70px"></label>
+      <label>Obs <input id="f-obs" autocomplete="off" placeholder="opcional" style="width:200px"></label>
+      <button type="submit">Registrar</button>
+    </form>
+    <datalist id="lista-itens"></datalist>
+    <div class="msg" id="msg-preco"></div>
+    <div class="dica">Todos os valores estão em HD (1 HD = 100 dólares do jogo). O preço é o total pela quantidade informada; o app guarda o valor por unidade. "k" = mil, "kk" = milhão.</div>
+
+    <div id="zona-print">
+      <b>Ou envie um print do market</b> (com a lista de itens aparecendo, o item é reconhecido sozinho): cole (Ctrl+V), arraste o arquivo aqui ou
+      <label class="link-arquivo">clique para escolher<input type="file" id="f-print" accept="image/*" hidden></label>.
+      <div style="margin-top:6px"><label class="auto-clip"><input type="checkbox" id="auto-clip" checked>
+        Receber automaticamente os prints do Win+Shift+S (sem colar)</label></div>
+    </div>
+    <div id="conferencia"></div>
+  </section>
+
+  <section class="painel">
+    <div class="topo-lista" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Itens</h2><a class="link-exportar" href="/exportar.csv">Exportar CSV (Excel)</a></div>
+    <div class="topo-lista">
+      <input id="busca" placeholder="Buscar item…">
+      <select id="ordem" title="Ordenação da lista">
+        <option value="categoria">Por categoria</option>
+        <option value="oportunidade">Melhores oportunidades</option>
+      </select>
+      <button class="sec" id="btn-novo">+ Novo item</button>
+    </div>
+    <form class="linha" id="novo-item">
+      <label>Nome <input id="n-nome" required></label>
+      <label>Categoria <input id="n-cat" list="lista-cats" placeholder="ex: Stones"></label>
+      <button type="submit">Adicionar</button>
+    </form>
+    <datalist id="lista-cats"></datalist>
+    <table id="tabela-itens">
+      <thead><tr><th>Item</th><th class="num" title="Menor oferta do último registro: o que você paga agora">Menor agora</th><th class="num" title="Mediana das ofertas ponderada pela quantidade">Mercado</th><th class="num">Média 30d</th><th>Sinal</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <section class="painel" id="detalhe">
+    <div class="vazio">Selecione um item na lista para ver o histórico.</div>
+  </section>
+
+  <details class="painel recolher" id="padrao-geral">
+    <summary><h2>Melhor dia e horário (todos os itens)</h2> <span class="nota" id="resumo-geral"></span></summary>
+    <div id="conteudo-geral"></div>
+  </details>
+</main>
+
+<main id="aba-busca" hidden>
+  <section class="painel" id="natures">
+    <h2>Pokémon</h2>
+    <div class="topo-lista">
+      <input id="busca-pokemon" list="lista-pokemon" placeholder="Nome do pokémon…" autocomplete="off">
+    </div>
+    <datalist id="lista-pokemon"></datalist>
+    <div id="resultado-nature"><div class="dica">Digite um pokémon para ver perfil, tipagem, TMs e a nature recomendada. A nature dele aparece no look da pokeball ou no "pokémon info". Escreva "Shiny" antes do nome para ver a versão shiny.</div></div>
+  </section>
+
+  <section class="painel" id="tms">
+    <h2>TMs e Move Tutor</h2>
+    <div class="topo-lista">
+      <input id="busca-tm" list="lista-tms" placeholder="TM ou golpe… (ex.: TM05, Earthquake, Heal Bell)" autocomplete="off">
+    </div>
+    <datalist id="lista-tms"></datalist>
+    <div id="resultado-tm"><div class="dica">Digite o número do TM ou o nome de um golpe para ver quem aprende por TM, no Move Tutor ou já tem no moveset.</div></div>
+  </section>
+
+  <section class="painel" id="helds">
+    <h2>Held Items</h2>
+    <div class="topo-lista">
+      <input id="busca-held" list="lista-held" placeholder="Held item… (ex.: Charizardite X)" autocomplete="off">
+    </div>
+    <datalist id="lista-held"></datalist>
+    <div id="resultado-held"><div class="dica">Digite um held item para ver o efeito, quem usa e o preço no market.</div></div>
+  </section>
+</main>
+
+<main id="aba-farm" hidden>
+  <section class="painel">
+    <div class="topo-lista" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Farm</h2><button id="btn-nova-farm">+ Nova sessão</button></div>
+    <div id="ranking-farm"></div>
+    <h3 class="titulo-sessoes">Sessões</h3>
+    <div id="lista-farms"></div>
+  </section>
+  <section class="painel" id="editor-farm"></section>
+  <datalist id="lista-farm-itens"></datalist>
+  <datalist id="lista-farm-locais"></datalist>
+</main>
+
+<main id="aba-quests" hidden>
+  <section class="painel" style="grid-column:1/-1">
+    <div class="topo-lista" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Quests</h2><span class="dica" id="quests-resumo"></span></div>
+    <form class="linha" id="quests-filtros" onsubmit="return false">
+      <label>Buscar <input name="busca" placeholder="Quest ou prêmio…" autocomplete="off"></label>
+      <label>Tipo <select name="grupo"><option value="">Todas</option><option>Quest</option><option value="Side Quest">Side Quests</option><option value="Especial">Especiais (datas comemorativas)</option></select></label>
+      <label>Mostrar <select name="mostrar"><option value="afazer">A fazer</option><option value="feitas">Feitas</option><option value="todas">Todas</option></select></label>
+      <label>Meu level <input name="nivel" type="number" min="1" max="1000" placeholder="opcional" style="width:100px"></label>
+      <label class="auto-clip"><input name="premium" type="checkbox"> Tenho premium</label>
+    </form>
+    <div id="quests-lista"></div>
+    <div class="dica" style="margin-top:8px">Da página "Quests" da wiki. Clique no nome para ver requisitos e passo a passo na wiki.
+      Com o seu level preenchido, as que você ainda não alcança ficam apagadas no fim da lista.</div>
+  </section>
+</main>
+
+<main id="aba-times" hidden>
+  <section class="painel">
+    <div class="topo-lista" style="justify-content:space-between;align-items:center"><h2 style="margin:0">Times</h2><button id="btn-novo-time">+ Novo time</button></div>
+    <div id="times"></div>
+  </section>
+  <section class="painel" id="editor-time"></section>
+  <datalist id="lista-itens-market"></datalist>
+</main>
+
+<main id="aba-breeding" hidden>
+  <section class="painel" id="casal">
+    <h2>Casal</h2>
+    <div class="pais">
+      <div class="pai" id="pai-1">
+        <b>Pokémon 1</b>
+        <span class="linha-pai"><input class="pai-nome" list="lista-pokemon" placeholder="Pokémon ou Ditto…" autocomplete="off">
+          <select class="pai-sexo" title="Sexo" hidden><option value="F">♀ fêmea</option><option value="M">♂ macho</option></select></span>
+        <div class="pai-info"></div>
+        <label>Ball <input class="pai-ball" list="lista-balls" placeholder="ex.: Ultra Ball" autocomplete="off"></label>
+        <span class="linha-pai"><label class="check"><input type="checkbox" class="pai-everstone"> Everstone</label>
+          <select class="pai-nature" title="Nature deste pokémon (passa para o filhote com a Everstone)" disabled></select></span>
+      </div>
+      <div class="pai" id="pai-2">
+        <b>Pokémon 2</b>
+        <span class="linha-pai"><input class="pai-nome" list="lista-pokemon" placeholder="Pokémon ou Ditto…" autocomplete="off">
+          <select class="pai-sexo" title="Sexo" hidden><option value="M">♂ macho</option><option value="F">♀ fêmea</option></select></span>
+        <div class="pai-info"></div>
+        <label>Ball <input class="pai-ball" list="lista-balls" placeholder="ex.: Ultra Ball" autocomplete="off"></label>
+        <span class="linha-pai"><label class="check"><input type="checkbox" class="pai-everstone"> Everstone</label>
+          <select class="pai-nature" title="Nature deste pokémon (passa para o filhote com a Everstone)" disabled></select></span>
+      </div>
+    </div>
+    <datalist id="lista-balls"></datalist>
+    <div id="resultado-casal"></div>
+  </section>
+  <section class="painel" id="parceiros"><div id="resultado-parceiros"></div></section>
+  <section class="painel" id="day-care">
+    <h2>Day Care</h2>
+    <h3>Para sair um ovo</h3>
+    <ul class="regras">
+      <li>Os dois do mesmo egg group, ou um deles Ditto</li>
+      <li>Sexos diferentes (com Ditto não precisa)</li>
+      <li>Level 50 a 99 (abaixo de 50 eles preferem brincar; os 100 só querem batalhar)</li>
+      <li>Pelo menos 24 horas no Day Care e pelo menos 1 level ganho lá</li>
+      <li>Para usar a incubadora, você precisa ser level 200 ou mais</li>
+    </ul>
+    <h3>Tempo para chocar</h3>
+    <table id="tabela-ovos"></table>
+    <div class="dica">Great: 5 usos; Super: 10 usos (as duas do site). Retirar o ovo da incubadora zera o progresso.</div>
+    <h3>Custo do Day Care</h3>
+    <div class="linha-pai"><label>XP ganha <input id="dc-xp" type="number" min="0" step="1"></label>
+      <label>Level do pokémon <input id="dc-level" type="number" min="1" max="100" value="50"></label></div>
+    <div id="dc-custo"></div>
+    <div class="dica">3 dólares por XP abaixo do level 50, 4 a partir dele. Retirar antes não cobra, mas perde a XP ganha.</div>
+    <h3>Ovos chocados</h3>
+    <div class="contador-ovos"><button class="sec" id="ovo-menos" title="Desfazer">−</button><b id="ovos-chocados">0</b><button id="ovo-mais">+1 ovo</button></div>
+    <div class="barra"><div id="barra-ovos"></div></div>
+    <div id="ovos-pachirisu" class="dica"></div>
+  </section>
+</main>
+
+<script src="/static/chart.umd.min.js"></script>
+<script src="/static/comum.js"></script>
+<script src="/static/pokemon.js"></script>
+<script src="/static/times.js"></script>
+<script src="/static/breeding.js"></script>
+<script src="/static/farm.js"></script>
+<script src="/static/quests.js"></script>
+<script>
+const DIA = 86400000;
+
+let itens = [], selecionado = null, historicoAtual = [], periodo = 30, grafico = null;
+// Camadas opcionais do gráfico (por padrão só Mercado, Média 30d e fora da curva)
+const CAMADAS = [["m7", "Média 7d"], ["faixa", "Faixa do print"], ["minmax", "Menor/Maior"]];
+let camadas = { m7: false, faixa: false, minmax: false };
+try { Object.assign(camadas, JSON.parse(localStorage.getItem("camadas") || "{}")); } catch {}
+
+
+// Aceita "25k", "1,5kk", "1.500", "1.500,50", "3500"
+function lerPreco(texto) {
+  let t = texto.trim().toLowerCase().replace(/\s/g, "");
+  let mult = 1;
+  if (t.endsWith("kk")) { mult = 1e6; t = t.slice(0, -2); }
+  else if (t.endsWith("k")) { mult = 1e3; t = t.slice(0, -1); }
+  if (t.includes(",")) t = t.replace(/\./g, "").replace(",", ".");
+  else if (/^\d{1,3}(\.\d{3})+$/.test(t)) t = t.replace(/\./g, "");
+  const n = Number(t) * mult;
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+function mensagem(el, texto, tipo) {
+  el.textContent = texto; el.className = "msg " + tipo;
+  clearTimeout(el._t); el._t = setTimeout(() => el.textContent = "", 4000);
+}
+
+async function carregarItens() {
+  itens = await api("/api/itens");
+  $("#lista-itens").innerHTML = itens.map(i => `<option value="${esc(i.nome)}">`).join("");
+  const cats = [...new Set(itens.map(i => i.categoria).filter(Boolean))];
+  $("#lista-cats").innerHTML = cats.map(c => `<option value="${esc(c)}">`).join("");
+  desenharTabela();
+  carregarPadraoGeral();
+}
+
+// Melhor dia e horário juntando todos os itens: cada registro comparado com o normal do próprio item
+async function carregarPadraoGeral() {
+  try {
+    const pd = padraoDeCompra(await api("/api/padrao-geral"));
+    $("#resumo-geral").innerHTML = conclusaoPadrao(pd, true);
+    $("#conteudo-geral").innerHTML = desenharPadrao(pd, null,
+      "Mercado de cada registro, de todos os itens, comparado com a mediana dos registros do mesmo item até 15 dias antes e depois");
+  } catch {}
+}
+
+
+
+function linhaItem(i, mostrarCategoria) {
+  return `
+    <tr data-id="${i.id}" class="${i.id === selecionado ? "sel" : ""}">
+      <td>${esc(i.nome)}<br><span class="cat">${mostrarCategoria ? esc(i.categoria || "Sem categoria") + " · " : ""}${i.registros} registro(s)</span></td>
+      <td class="num">${i.atual_fora ? '<span class="aviso-fora" title="Último preço fora da curva: não entra nas médias">⚠ </span>' : ""}${fmt(i.atual)}</td>
+      <td class="num">${fmt(i.mercado_atual)}</td>
+      <td class="num">${fmt(i.media30)}</td>
+      <td>${selo(i)}</td>
+    </tr>`;
+}
+
+// Categorias recolhidas na lista (lembradas entre visitas)
+let recolhidos = new Set();
+try { recolhidos = new Set(JSON.parse(localStorage.getItem("recolhidos") || "[]")); } catch {}
+
+function desenharTabela() {
+  const busca = $("#busca").value.trim().toLowerCase();
+  const lista = itens.filter(i => !busca || i.nome.toLowerCase().includes(busca) || i.categoria.toLowerCase().includes(busca));
+  const porNome = (a, b) => a.nome.localeCompare(b.nome, "pt-BR");
+  let html;
+  if ($("#ordem").value === "oportunidade") {
+    // Mais abaixo da média primeiro; itens sem dados suficientes vão para o fim
+    const temSinal = i => i.diff30 != null && i.sinal !== "poucos dados";
+    lista.sort((a, b) => temSinal(b) - temSinal(a) || (temSinal(a) ? a.diff30 - b.diff30 : porNome(a, b)));
+    html = lista.map(i => linhaItem(i, true)).join("");
+  } else {
+    const grupos = {};
+    for (const i of lista) (grupos[i.categoria || ""] ??= []).push(i);
+    const nomes = Object.keys(grupos).sort((a, b) => !a - !b || a.localeCompare(b, "pt-BR"));
+    // Durante uma busca os grupos ficam abertos, para não esconder resultados
+    html = nomes.map(g => {
+      const fechado = !busca && recolhidos.has(g);
+      return `<tr class="grupo" data-grupo="${esc(g)}"><td colspan="5">${fechado ? "▸" : "▾"} ${esc(g || "Sem categoria")}
+          <span class="qtd">(${grupos[g].length})</span></td></tr>` +
+        (fechado ? "" : grupos[g].sort(porNome).map(i => linhaItem(i, false)).join(""));
+    }).join("");
+  }
+  $("#tabela-itens tbody").innerHTML = html || `<tr><td colspan="5" class="vazio">Nenhum item.</td></tr>`;
+}
+
+async function selecionar(id) {
+  selecionado = id;
+  desenharTabela();
+  historicoAtual = await api(`/api/itens/${id}/precos`);
+  desenharDetalhe();
+}
+
+function mediaMovel(pontos, dias) {
+  return pontos.map((p, idx) => {
+    const janela = pontos.slice(0, idx + 1).filter(q => q.x > p.x - dias * DIA);
+    return { x: p.x, y: janela.reduce((s, q) => s + q.y, 0) / janela.length };
+  });
+}
+
+// Quando o item fica mais barato: cada registro é comparado com a mediana dos vizinhos (±15 dias, a mesma do
+// fora da curva), para uma alta ou queda geral do preço não parecer efeito do dia. Usa o mercado e todo o histórico.
+const DIAS_SEMANA = [[1, "Seg"], [2, "Ter"], [3, "Qua"], [4, "Qui"], [5, "Sex"], [6, "Sáb"], [0, "Dom"]];
+const NOMES_DIA = { 0: "domingo", 1: "segunda", 2: "terça", 3: "quarta", 4: "quinta", 5: "sexta", 6: "sábado" };
+const PERIODOS_DIA = [[0, "Madrugada", "0h–6h", "de madrugada"], [1, "Manhã", "6h–12h", "de manhã"],
+                      [2, "Tarde", "12h–18h", "à tarde"], [3, "Noite", "18h–24h", "à noite"]];
+const MINIMO_GRUPO = 3;       // registros num dia/período para ele contar
+const DIFERENCA_PADRAO = 0.05; // o mais barato precisa ficar 5 pontos abaixo do mais caro
+
+function padraoDeCompra(historico) {
+  const comparaveis = historico.filter(p => !p.fora && p.referencia).map(p => {
+    const d = new Date(p.registrado_em.replace(" ", "T"));
+    return { dia: d.getDay(), periodo: Math.floor(d.getHours() / 6), diff: p.mercado / p.referencia - 1 };
+  });
+  const agrupar = (chaves, campo) => chaves.map(([k]) => {
+    const diffs = comparaveis.filter(c => c[campo] === k).map(c => c.diff);
+    return { k, n: diffs.length, diff: diffs.length ? mediana(diffs) : null };
+  });
+  // Conclusão só com 2+ grupos de 3+ registros e diferença real entre o mais barato e o mais caro
+  const melhor = grupos => {
+    const validos = grupos.filter(g => g.n >= MINIMO_GRUPO);
+    if (validos.length < 2) return null;
+    const ordem = [...validos].sort((a, b) => a.diff - b.diff);
+    return ordem.at(-1).diff - ordem[0].diff >= DIFERENCA_PADRAO && ordem[0].diff < 0 ? ordem[0] : null;
+  };
+  const dias = agrupar(DIAS_SEMANA, "dia"), periodos = agrupar(PERIODOS_DIA, "periodo");
+  return { n: comparaveis.length, dias, periodos, melhorDia: melhor(dias), melhorPeriodo: melhor(periodos) };
+}
+
+function mediana(v) {
+  const o = [...v].sort((a, b) => a - b), m = Math.floor(o.length / 2);
+  return o.length % 2 ? o[m] : (o[m - 1] + o[m]) / 2;
+}
+
+function desenharPadrao(pd, titulo = "Quando fica mais barato",
+    explicacao = "Mercado de cada registro comparado com a mediana dos registros até 15 dias antes e depois") {
+  const pct = d => { const n = Math.round(d * 100); return `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n)}%`; };
+  const celula = (rotulo, g, dica) => {
+    const classe = g.n < MINIMO_GRUPO ? "pouco" : g.diff <= -DIFERENCA_PADRAO / 2 ? "barato" : g.diff >= DIFERENCA_PADRAO / 2 ? "caro" : "";
+    return `<div class="${classe}" title="${dica ? dica + ": " : ""}${g.n} registro(s) comparável(is)${g.n && g.n < MINIMO_GRUPO ? ", poucos para concluir" : ""}">
+      <span>${rotulo}</span><b>${g.n ? pct(g.diff) : "—"}</b><small>${g.n}×</small></div>`;
+  };
+  return `
+    <div class="padrao">
+      ${titulo ? `<h3>${titulo}</h3><div class="nota">${conclusaoPadrao(pd)}</div>` : ""}
+      <div class="grade-padrao">${pd.dias.map((g, i) => celula(DIAS_SEMANA[i][1], g)).join("")}</div>
+      <div class="grade-padrao">${pd.periodos.map((g, i) => celula(PERIODOS_DIA[i][1], g, PERIODOS_DIA[i][2])).join("")}</div>
+      <div class="dica">${explicacao} (${pd.n} comparáveis).
+        Negativo = mais barato que o normal. Registrar em dias e horários variados deixa a análise melhor.</div>
+    </div>`;
+}
+
+function conclusaoPadrao(pd, geral) {
+  const pct = d => { const n = Math.round(d * 100); return `${n > 0 ? "+" : n < 0 ? "−" : ""}${Math.abs(n)}%`; };
+  const partes = [pd.melhorDia && `<b>${NOMES_DIA[pd.melhorDia.k]}</b> (${pct(pd.melhorDia.diff)})`,
+                  pd.melhorPeriodo && `<b>${PERIODOS_DIA[pd.melhorPeriodo.k][3]}</b> (${pct(pd.melhorPeriodo.diff)})`].filter(Boolean);
+  return partes.length
+    ? `${geral ? "Em geral, os itens costumam" : "Costuma"} ficar mais barato${geral ? "s" : ""} ${partes.join(" e ")} em relação ao preço normal da época.`
+    : pd.n
+      ? `Ainda não dá para dizer: precisa de pelo menos ${MINIMO_GRUPO} registros em 2 dias (ou períodos) diferentes, e uma diferença clara entre eles.`
+      : `Ainda não dá para comparar: cada registro precisa de ${MINIMO_GRUPO} outros num intervalo de 15 dias antes ou depois dele.`;
+}
+
+// Volume à venda: unidades somadas das ofertas de cada print (registros manuais não têm). Bloco recolhido.
+let volumeAberto = false, graficoVolume = null;
+try { volumeAberto = localStorage.getItem("volumeAberto") === "1"; } catch {}
+
+function desenharVolume(historico) {
+  const prints = historico.filter(p => p.n_ofertas > 0);
+  if (!prints.length) return "";
+  const ultimo = prints.at(-1);
+  const corte = new Date(Date.now() - 30 * DIA).toISOString().slice(0, 10);
+  const q30 = prints.filter(p => p.registrado_em >= corte).map(p => p.quantidade);
+  return `
+    <details class="recolher volume" id="volume" ${volumeAberto ? "open" : ""}>
+      <summary><b>Volume à venda</b> · último print: ${fmt(ultimo.quantidade)} unidade(s) em ${ultimo.n_ofertas} oferta(s)${q30.length > 1 ? ` · mediana 30d: ${fmt(mediana(q30))}` : ""}</summary>
+      <div class="grafico"><canvas id="canvas-volume"></canvas></div>
+      <div class="dica">Total de unidades nas ofertas de cada print (segue o período escolhido acima). Muito à venda costuma segurar o preço; pouco, deixar subir.</div>
+    </details>`;
+}
+
+function montarVolume() {
+  if (graficoVolume) { graficoVolume.destroy(); graficoVolume = null; }
+  if (!$("#volume")?.open) return;
+  const corte = periodo ? Date.now() - periodo * DIA : -Infinity;
+  const pontos = historicoAtual.filter(p => p.n_ofertas > 0)
+    .map(p => ({ x: new Date(p.registrado_em.replace(" ", "T")).getTime(), y: p.quantidade })).filter(p => p.x >= corte);
+  const css = getComputedStyle(document.documentElement);
+  graficoVolume = new Chart($("#canvas-volume"), {
+    type: "bar",
+    data: { datasets: [{ label: "Unidades à venda", data: pontos, backgroundColor: css.getPropertyValue("--linha-m30").trim(), maxBarThickness: 14 }] },
+    options: {
+      maintainAspectRatio: false, animation: false,
+      scales: {
+        x: { type: "linear", ticks: { callback: v => new Date(v).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }), maxTicksLimit: 8 } },
+        y: { beginAtZero: true, ticks: { precision: 0 } },
+      },
+      plugins: { legend: { display: false }, tooltip: { callbacks: {
+        title: c => new Date(c[0].parsed.x).toLocaleString("pt-BR"), label: c => `${fmt(c.parsed.y)} unidade(s)` } } },
+    },
+  });
+}
+$("#detalhe").addEventListener("toggle", e => {
+  if (e.target.id !== "volume") return;
+  volumeAberto = e.target.open;
+  try { localStorage.setItem("volumeAberto", volumeAberto ? "1" : "0"); } catch {}
+  montarVolume();
+}, true);
+
+function desenharDetalhe() {
+  const item = itens.find(i => i.id === selecionado);
+  if (!item) { $("#detalhe").innerHTML = `<div class="vazio">Selecione um item na lista para ver o histórico.</div>`; return; }
+
+  $("#detalhe").innerHTML = `
+    <div class="cab-detalhe">
+      <h2 style="margin:0">${esc(item.nome)} ${selo(item)}
+        ${item.fora_da_curva ? `<span class="dica">· ${item.fora_da_curva} fora da curva, fora das médias</span>` : ""}</h2>
+      <div class="periodos">
+        ${[[7, "7d"], [30, "30d"], [90, "90d"], [0, "Tudo"]].map(([d, t]) =>
+          `<button class="sec ${periodo === d ? "ativo" : ""}" data-periodo="${d}">${t}</button>`).join("")}
+        <button class="del" id="btn-remover-item" title="Remover item e todo o histórico">Remover item</button>
+      </div>
+    </div>
+    <div class="cards">
+      <div class="card" title="Menor oferta do último registro: o que você paga agora"><span>Menor agora</span><b>${fmt(item.atual)}</b></div>
+      <div class="card" title="Mediana das ofertas ponderada pela quantidade"><span>Mercado agora${item.atual_fora ? ' <span class="aviso-fora">· fora da curva</span>' : ""}</span><b>${fmt(item.mercado_atual)}</b></div>
+      <div class="card"><span>Média 7d</span><b>${fmt(item.media7)}</b></div>
+      <div class="card"><span>Média 30d</span><b>${fmt(item.media30)}</b></div>
+      <div class="card"><span>Mín 30d</span><b>${fmt(item.min30)}</b></div>
+      <div class="card"><span>Máx 30d</span><b>${fmt(item.max30)}</b></div>
+    </div>
+    <form class="alvo" id="form-alvo">🎯 Avisar quando o menor preço ficar em até
+      <input id="i-alvo" type="number" min="0.01" step="any" value="${item.alvo ?? ""}" placeholder="sem alvo"> HD
+      <button type="submit">Salvar</button>
+      ${item.alvo != null ? `<button type="button" class="sec" id="btn-sem-alvo">Remover alvo</button>` : ""}
+    </form>
+    ${historicoAtual.length ? `
+      <div class="periodos camadas">Mostrar:
+        ${CAMADAS.map(([k, t]) => `<button class="sec ${camadas[k] ? "ativo" : ""}" data-camada="${k}">${t}</button>`).join("")}
+      </div>
+      <div class="grafico"><canvas id="canvas"></canvas></div>
+      ${desenharPadrao(padraoDeCompra(historicoAtual))}
+      ${desenharVolume(historicoAtual)}` : `<div class="vazio">Nenhum preço registrado ainda.</div>`}
+    <div id="historico"></div>`;
+
+  const quando = p => new Date(p.registrado_em.replace(" ", "T")).getTime();
+  // Preços fora da curva ficam fora da linha, das médias e do menor/maior; aparecem só como ✕
+  const todos = historicoAtual.filter(p => !p.fora).map(p => ({ x: quando(p), y: p.mercado }));
+  const foraDaCurva = historicoAtual.filter(p => p.fora).map(p => ({ x: quando(p), y: p.mercado }));
+  const prints = historicoAtual.filter(p => p.n_ofertas > 0);
+  const printBarata = prints.map(p => ({ x: quando(p), y: p.oferta_min }));
+  const printCara = prints.map(p => ({ x: quando(p), y: p.oferta_max }));
+  const corte = periodo ? Date.now() - periodo * DIA : -Infinity;
+  const noPeriodo = arr => arr.filter(p => p.x >= corte);
+
+  if (grafico) { grafico.destroy(); grafico = null; }
+  if (historicoAtual.length) {
+    const css = getComputedStyle(document.documentElement);
+    const cor = n => css.getPropertyValue(n).trim();
+    // Menor e maior preço do período: pontos destacados + linhas de referência
+    const visiveis = noPeriodo(todos);
+    const menor = visiveis.length ? Math.min(...visiveis.map(p => p.y)) : null;
+    const maior = visiveis.length ? Math.max(...visiveis.map(p => p.y)) : null;
+    const xIni = visiveis.length ? visiveis[0].x : 0, xFim = visiveis.length ? visiveis.at(-1).x : 0;
+    const destaca = p => camadas.minmax && (p.y === menor || p.y === maior);
+    const corPonto = p => !destaca(p) ? cor("--linha-preco") : p.y === menor ? cor("--linha-min") : cor("--linha-max");
+    const raioPonto = p => destaca(p) ? 7 : 3;
+    const referencia = (rotulo, valor, corLinha) => ({
+      label: `${rotulo}: ${fmt(valor)}`, data: [{ x: xIni, y: valor }, { x: xFim, y: valor }],
+      borderColor: corLinha, backgroundColor: corLinha, borderWidth: 1.5, borderDash: [8, 4], pointRadius: 0, referencia: true,
+    });
+    grafico = new Chart($("#canvas"), {
+      type: "line",
+      data: { datasets: [
+        { label: "Mercado", data: visiveis, borderColor: cor("--linha-preco"), backgroundColor: cor("--linha-preco"), tension: 0,
+          pointRadius: visiveis.map(raioPonto), pointHoverRadius: visiveis.map(p => raioPonto(p) + 2),
+          pointBackgroundColor: visiveis.map(corPonto), pointBorderColor: visiveis.map(corPonto) },
+        ...(camadas.m7 ? [{ label: "Média 7d", data: noPeriodo(mediaMovel(todos, 7)), borderColor: cor("--linha-m7"), pointRadius: 0, borderDash: [5, 4] }] : []),
+        { label: "Média 30d", data: noPeriodo(mediaMovel(todos, 30)), borderColor: cor("--linha-m30"), pointRadius: 0, borderDash: [2, 3] },
+        ...(camadas.minmax && visiveis.length ? [referencia("Menor", menor, cor("--linha-min")), referencia("Maior", maior, cor("--linha-max"))] : []),
+        ...(foraDaCurva.length ? [{ label: "Fora da curva (ignorado)", data: noPeriodo(foraDaCurva), showLine: false,
+          borderColor: cor("--fora"), backgroundColor: cor("--fora"), pointStyle: "crossRot", pointRadius: 8, pointBorderWidth: 3 }] : []),
+        // Faixa de cada print: da oferta mais barata à mais cara, com a área entre elas preenchida
+        ...(camadas.faixa && prints.length ? [
+          { label: "Mais barata do print", data: noPeriodo(printBarata), borderColor: cor("--print-barata"), backgroundColor: cor("--print-barata"),
+            borderWidth: 1, pointStyle: "triangle", rotation: 180, pointRadius: 6 },
+          { label: "Mais cara do print", data: noPeriodo(printCara), borderColor: cor("--print-cara"), pointBackgroundColor: cor("--print-cara"),
+            backgroundColor: cor("--print-cara") + "22", fill: "-1", borderWidth: 1, pointStyle: "triangle", pointRadius: 6 },
+        ] : []),
+      ]},
+      options: {
+        maintainAspectRatio: false, parsing: false, animation: false,
+        interaction: { mode: "nearest", intersect: false },
+        scales: {
+          x: { type: "linear", ticks: { color: cor("--suave"), maxTicksLimit: 8, callback: v => new Date(v).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" }) }, grid: { color: cor("--borda") } },
+          y: { title: { display: true, text: "HD", color: cor("--suave") }, ticks: { color: cor("--suave"), callback: v => fmt(v) }, grid: { color: cor("--borda") } },
+        },
+        plugins: {
+          legend: { labels: { color: cor("--texto") } },
+          tooltip: { filter: c => !c.dataset.referencia, callbacks: {
+            title: c => new Date(c[0].parsed.x).toLocaleString("pt-BR"),
+            label: c => `${c.dataset.label}: ${fmt(c.parsed.y)} HD`,
+          }},
+        },
+      },
+    });
+  }
+
+  const recentes = [...historicoAtual].reverse();
+  $("#historico").innerHTML = recentes.length ? `
+    <table><thead><tr><th>Data</th><th class="num">Menor (HD)</th><th class="num">Mercado (HD)</th><th class="num">Faixa do print (HD)</th><th>Obs</th><th>Nas médias</th><th></th></tr></thead><tbody>
+    ${recentes.map(p => `<tr class="${p.fora ? "fora-curva" : ""}">
+      <td>${new Date(p.registrado_em.replace(" ", "T")).toLocaleString("pt-BR")}</td>
+      <td class="num">${fmt(p.preco)}</td><td class="num">${fmt(p.mercado)}</td><td class="num">${p.n_ofertas ? `${fmt(p.oferta_min)} – ${fmt(p.oferta_max)}` : "—"}</td><td>${esc(p.obs)}</td>
+      <td class="acoes">
+        <select data-ignorar="${p.id}" title="${p.referencia ? "Mediana dos vizinhos: " + fmt(p.referencia) + " HD" : "Poucos registros por perto para comparar"}">
+          <option value="" ${p.ignorar == null ? "selected" : ""}>Auto: ${p.fora_auto ? "ignorado ⚠" : "usado"}</option>
+          <option value="0" ${p.ignorar === 0 ? "selected" : ""}>Sempre usar</option>
+          <option value="1" ${p.ignorar === 1 ? "selected" : ""}>Ignorar</option>
+        </select>
+      </td>
+      <td class="num acoes"><button class="del" data-del-preco="${p.id}" title="Apagar registro">✕</button></td>
+    </tr>`).join("")}
+    </tbody></table>` : "";
+  montarVolume();
+}
+
+// Eventos
+$("#form-preco").addEventListener("submit", async e => {
+  e.preventDefault();
+  const msg = $("#msg-preco");
+  const nome = $("#f-item").value.trim();
+  const item = itens.find(i => i.nome.toLowerCase() === nome.toLowerCase());
+  if (!item) return mensagem(msg, `Item "${nome}" não cadastrado. Adicione em "+ Novo item".`, "erro");
+  const preco = lerPreco($("#f-preco").value);
+  if (preco == null) return mensagem(msg, "Preço inválido.", "erro");
+  try {
+    await api("/api/precos", { method: "POST", body: JSON.stringify({ item_id: item.id, preco, quantidade: $("#f-qtd").value, obs: $("#f-obs").value }) });
+    mensagem(msg, `Registrado: ${item.nome} — ${fmt(preco / ($("#f-qtd").value || 1))} HD por unidade.`, "ok");
+    $("#f-preco").value = ""; $("#f-obs").value = ""; $("#f-qtd").value = 1;
+    $("#f-preco").focus();
+    await carregarItens();
+    await selecionar(item.id);
+  } catch (err) { mensagem(msg, err.message, "erro"); }
+});
+
+$("#busca").addEventListener("input", desenharTabela);
+try { $("#ordem").value = localStorage.getItem("ordem") || "categoria"; } catch {}
+$("#ordem").addEventListener("change", e => { try { localStorage.setItem("ordem", e.target.value); } catch {} desenharTabela(); });
+$("#tabela-itens").addEventListener("click", e => {
+  const grupo = e.target.closest("tr[data-grupo]");
+  if (grupo) {
+    const g = grupo.dataset.grupo;
+    recolhidos.has(g) ? recolhidos.delete(g) : recolhidos.add(g);
+    try { localStorage.setItem("recolhidos", JSON.stringify([...recolhidos])); } catch {}
+    return desenharTabela();
+  }
+  const tr = e.target.closest("tr[data-id]");
+  if (tr) { selecionar(Number(tr.dataset.id)); $("#f-item").value = itens.find(i => i.id === Number(tr.dataset.id)).nome; }
+});
+
+$("#btn-novo").addEventListener("click", () => {
+  const f = $("#novo-item");
+  f.style.display = f.style.display === "flex" ? "none" : "flex";
+  if (f.style.display === "flex") $("#n-nome").focus();
+});
+$("#novo-item").addEventListener("submit", async e => {
+  e.preventDefault();
+  try {
+    const { id } = await api("/api/itens", { method: "POST", body: JSON.stringify({ nome: $("#n-nome").value, categoria: $("#n-cat").value }) });
+    $("#f-item").value = $("#n-nome").value;
+    $("#n-nome").value = "";
+    await carregarItens();
+    await selecionar(id);
+    $("#f-preco").focus();
+  } catch (err) { alert(err.message); }
+});
+
+$("#detalhe").addEventListener("change", async e => {
+  const id = e.target.dataset.ignorar;
+  if (!id) return;
+  const valor = e.target.value === "" ? null : Number(e.target.value);
+  await api(`/api/precos/${id}`, { method: "PATCH", body: JSON.stringify({ ignorar: valor }) });
+  await carregarItens(); await selecionar(selecionado);
+});
+
+$("#detalhe").addEventListener("click", async e => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  if (b.dataset.periodo != null) { periodo = Number(b.dataset.periodo); desenharDetalhe(); }
+  else if (b.dataset.camada) {
+    camadas[b.dataset.camada] = !camadas[b.dataset.camada];
+    try { localStorage.setItem("camadas", JSON.stringify(camadas)); } catch {}
+    desenharDetalhe();
+  }
+  else if (b.dataset.delPreco) {
+    if (!confirm("Apagar este registro?")) return;
+    await api(`/api/precos/${b.dataset.delPreco}`, { method: "DELETE" });
+    await carregarItens(); await selecionar(selecionado);
+  } else if (b.id === "btn-remover-item") {
+    const item = itens.find(i => i.id === selecionado);
+    if (!confirm(`Remover "${item.nome}" e todo o histórico dele?`)) return;
+    await api(`/api/itens/${selecionado}`, { method: "DELETE" });
+    selecionado = null; await carregarItens(); desenharDetalhe();
+  }
+});
+
+// Leitura de print do market
+let ofertasLidas = [], itemDoPrint = "", itemDetectado = false, imgPrint = "";
+
+function itemDoFormulario() {
+  const nome = $("#f-item").value.trim();
+  return itens.find(i => i.nome.toLowerCase() === nome.toLowerCase());
+}
+
+async function enviarPrint(arquivo) {
+  const msg = $("#msg-preco");
+  if (!arquivo || !arquivo.type.startsWith("image/")) return;
+  imgPrint = URL.createObjectURL(arquivo);
+  $("#conferencia").innerHTML = `<div class="dica">Lendo o print… (o primeiro pode levar alguns segundos)</div>`;
+  const form = new FormData();
+  form.append("imagem", arquivo);
+  try {
+    const r = await fetch("/api/ler-print", { method: "POST", body: form });
+    const dados = await r.json();
+    if (!r.ok) throw new Error(dados.erro);
+    ofertasLidas = dados.ofertas.map(o => ({ ...o, incluir: true }));
+    itemDetectado = !!dados.item;
+    // O nome lido do print tem a grafia do jogo; o servidor corrige o cadastrado se preciso
+    itemDoPrint = dados.item || itemDoFormulario()?.nome || "";
+    desenharConferencia();
+  } catch (err) {
+    $("#conferencia").innerHTML = "";
+    mensagem(msg, err.message, "erro");
+  }
+}
+
+function desenharConferencia() {
+  const incluidas = ofertasLidas.filter(o => o.incluir && o.preco > 0);
+  const menor = incluidas.length ? Math.min(...incluidas.map(o => o.preco)) : null;
+  // Oferta abaixo de 60% da mediana do print (mesmo critério do histórico) provavelmente é erro ou isca
+  const precosOrd = incluidas.map(o => o.preco).sort((a, b) => a - b);
+  const medPrint = precosOrd.length >= 3 ? precosOrd[Math.floor(precosOrd.length / 2)] : null;
+  const suspeita = o => medPrint && o.preco < 0.6 * medPrint;
+  // Mesmo cálculo do servidor: onde a quantidade acumulada passa da metade
+  let mercado = null, acumulado = 0;
+  const metade = incluidas.reduce((t, o) => t + o.quantidade, 0) / 2;
+  for (const o of [...incluidas].sort((a, b) => a.preco - b.preco)) {
+    acumulado += o.quantidade;
+    if (acumulado >= metade) { mercado = o.preco; break; }
+  }
+  const existe = itens.some(i => i.nome.toLowerCase() === itemDoPrint.trim().toLowerCase());
+  const situacao = !itemDoPrint.trim() ? "Não achei o item no print: informe qual é."
+    : !existe ? "Item novo: será cadastrado ao confirmar."
+    : itemDetectado ? "Detectado no print."
+    : "<b>Não reconheci o item no print</b>: usando o do campo Item. Confira antes de confirmar.";
+  $("#conferencia").innerHTML = `
+    <h2>Conferir print</h2>
+    <div class="cols">
+      <img src="${imgPrint}" alt="print enviado">
+      <div>
+        <form class="linha" style="margin-bottom:8px" onsubmit="return false">
+          <label>Item <input id="c-item" list="lista-itens" value="${esc(itemDoPrint)}" autocomplete="off" style="width:220px"></label>
+        </form>
+        <div class="dica" style="margin-bottom:8px">${situacao}</div>
+        <table>
+          <thead><tr><th></th><th>Jogador</th><th class="num">Qtd</th><th class="num">Preço/un (HD)</th><th></th></tr></thead>
+          <tbody>${ofertasLidas.map((o, i) => `
+            <tr class="${!o.incluir ? "fora" : o.preco === menor ? "menor" : ""}">
+              <td><input type="checkbox" data-i="${i}" data-campo="incluir" ${o.incluir ? "checked" : ""}></td>
+              <td><input data-i="${i}" data-campo="jogador" value="${esc(o.jogador)}"></td>
+              <td class="num"><input data-i="${i}" data-campo="quantidade" type="number" min="1" value="${o.quantidade}" style="width:70px"></td>
+              <td class="num"><input data-i="${i}" data-campo="preco" type="number" min="0.01" step="any" value="${o.preco}"></td>
+              <td>${o.incluir && suspeita(o) ? '<span class="aviso-fora">⚠ muito abaixo das outras</span>' : ""}</td>
+            </tr>`).join("")}
+          </tbody>
+        </table>
+        <p>Menor preço: <b>${fmt(menor)} HD</b> · Mercado (mediana ponderada): <b>${fmt(mercado)} HD</b> · ${incluidas.length} oferta(s)</p>
+        ${incluidas.some(suspeita) ? `<p class="aviso-fora">O menor preço parece fora da curva. Se for erro ou isca, desmarque a oferta; se for real, pode ser uma boa compra.</p>` : ""}
+        <button id="btn-confirmar-print" ${incluidas.length && itemDoPrint.trim() ? "" : "disabled"}>Confirmar e registrar</button>
+        <button class="sec" id="btn-cancelar-print">Cancelar</button>
+      </div>
+    </div>`;
+}
+
+$("#conferencia").addEventListener("change", e => {
+  if (e.target.id === "c-item") { itemDoPrint = e.target.value; itemDetectado = false; return desenharConferencia(); }
+  const { i, campo } = e.target.dataset;
+  if (i == null) return;
+  const o = ofertasLidas[i];
+  if (campo === "incluir") o.incluir = e.target.checked;
+  else if (campo === "jogador") o.jogador = e.target.value;
+  else o[campo] = Number(e.target.value);
+  desenharConferencia();
+});
+
+$("#conferencia").addEventListener("click", async e => {
+  if (e.target.id === "btn-cancelar-print") { $("#conferencia").innerHTML = ""; return; }
+  if (e.target.id !== "btn-confirmar-print") return;
+  const msg = $("#msg-preco");
+  const nome = $("#c-item").value.trim();
+  try {
+    const r = await api("/api/ofertas", { method: "POST", body: JSON.stringify({
+      item: nome,
+      detectado: itemDetectado,
+      ofertas: ofertasLidas.filter(o => o.incluir).map(({ jogador, quantidade, preco }) => ({ jogador, quantidade, preco })),
+    })});
+    $("#conferencia").innerHTML = "";
+    mensagem(msg, `Registrado: ${nome} — ${fmt(r.preco)} HD (menor oferta do print)${r.novo_item ? ". Item novo cadastrado." : "."}` +
+      r.alertas.map(a => ` ${a.tipo === "alvo" ? "🎯" : "🟢"} ${a.mensagem}.`).join(""), "ok");
+    $("#f-item").value = nome;
+    await carregarItens();
+    await selecionar(r.item_id);
+  } catch (err) { mensagem(msg, err.message, "erro"); }
+});
+
+$("#f-print").addEventListener("change", e => { enviarPrint(e.target.files[0]); e.target.value = ""; });
+document.addEventListener("paste", e => {
+  const arquivo = [...e.clipboardData.files].find(f => f.type.startsWith("image/"));
+  if (arquivo) { e.preventDefault(); enviarPrint(arquivo); }
+});
+const zona = $("#zona-print");
+zona.addEventListener("dragover", e => { e.preventDefault(); zona.classList.add("arrastando"); });
+zona.addEventListener("dragleave", () => zona.classList.remove("arrastando"));
+zona.addEventListener("drop", e => { e.preventDefault(); zona.classList.remove("arrastando"); enviarPrint(e.dataTransfer.files[0]); });
+
+// Prints do Win+Shift+S chegam pelo servidor, que vigia a área de transferência do Windows
+let capturasVistas = null;
+try { $("#auto-clip").checked = localStorage.getItem("autoClip") !== "0"; } catch {}
+$("#auto-clip").addEventListener("change", e => { try { localStorage.setItem("autoClip", e.target.checked ? "1" : "0"); } catch {} });
+
+async function verificarCapturas() {
+  try {
+    const r = await api(`/api/capturas?depois=${capturasVistas ?? 0}`);
+    if (capturasVistas === null) { capturasVistas = r.total; return; }  // ignora o que chegou antes de abrir a página
+    capturasVistas = r.total;
+    if (!r.nome || !$("#auto-clip").checked) return;
+    const blob = await (await fetch(`/capturas/${r.nome}`)).blob();
+    enviarPrint(new File([blob], r.nome, { type: "image/png" }));
+  } catch {}
+}
+setInterval(verificarCapturas, 1000);
+verificarCapturas();
+
+// Preço-alvo do item selecionado
+$("#detalhe").addEventListener("submit", async e => {
+  if (e.target.id !== "form-alvo") return;
+  e.preventDefault();
+  try {
+    await api(`/api/itens/${selecionado}/alvo`, { method: "PUT", body: JSON.stringify({ alvo: $("#i-alvo").value }) });
+    await carregarItens(); desenharDetalhe();
+  } catch (err) { alert(err.message); }
+});
+$("#detalhe").addEventListener("click", async e => {
+  if (e.target.id !== "btn-sem-alvo") return;
+  await api(`/api/itens/${selecionado}/alvo`, { method: "PUT", body: JSON.stringify({ alvo: null }) });
+  await carregarItens(); desenharDetalhe();
+});
+
+// Alertas e modo mini
+$("#btn-mini").addEventListener("click", async () => {
+  try { await api("/api/abrir-mini", { method: "POST" }); }
+  catch (err) { window.open("/mini", "mini", "width=360,height=620"); }
+});
+
+async function desenharPainelAlertas() {
+  const { alertas, nao_lidos } = await api("/api/alertas");
+  const permissao = naDesktop() ? "granted" : window.Notification?.permission;
+  $("#painel-alertas").innerHTML = (alertas.map(a => `
+    <div class="alerta ${a.lido ? "" : "nao-lido"}">${ICONE_ALERTA[a.tipo] || "•"} ${esc(a.mensagem)}
+      <br><small>${new Date(a.criado_em.replace(" ", "T")).toLocaleString("pt-BR")}</small></div>`).join("")
+    || `<div class="dica">Nenhum alerta ainda. Eles aparecem quando um preço registrado deixa um item "ótimo" ou atinge o seu alvo, e quando um cronômetro acaba.</div>`) + `
+    <div class="rodape">
+      ${permissao === "default" ? `<button id="btn-permitir">Ativar notificações do Windows</button>` : permissao === "denied" ? "Notificações bloqueadas no navegador" : ""}
+      ${nao_lidos ? `<button class="sec" id="btn-lidos">Marcar como lidos</button>` : ""}
+    </div>`;
+}
+// Painéis do topo (sobre, apoiar, créditos, alertas): abrir um fecha os outros
+function alternarPainel(id) {
+  for (const p of ["#menu-info", "#painel-sobre", "#painel-apoiar", "#painel-creditos", "#painel-alertas", "#painel-cronometros"]) $(p).hidden = p === id ? !$(p).hidden : true;
+  return !$(id).hidden;
+}
+$("#btn-apoiar").addEventListener("click", () => alternarPainel("#painel-apoiar"));
+$("#btn-copiar-pix").addEventListener("click", async e => {
+  try { await navigator.clipboard.writeText($("#chave-pix").textContent); e.target.textContent = "Copiado ✓"; }
+  catch { getSelection().selectAllChildren($("#chave-pix")); e.target.textContent = "Ctrl+C para copiar"; }
+  setTimeout(() => e.target.textContent = "Copiar", 2000);
+});
+// Aparência: automático (segue o Windows) → Caderno claro → Caderno noturno
+const TEMAS = [["", "automático"], ["caderno", "caderno claro"], ["noite", "caderno noturno"]];
+function aplicarTema() {
+  const t = document.documentElement.dataset.tema || "";
+  $("#nome-tema").textContent = (TEMAS.find(([k]) => k === t) || TEMAS[0])[1];
+  const css = getComputedStyle(document.documentElement);
+  Chart.defaults.color = css.getPropertyValue("--suave").trim();
+  Chart.defaults.borderColor = css.getPropertyValue("--borda").trim();
+  Chart.defaults.font.family = '"Atkinson Hyperlegible", system-ui, sans-serif';
+}
+$("#btn-tema").addEventListener("click", () => {
+  const atual = document.documentElement.dataset.tema || "";
+  const proximo = TEMAS[(TEMAS.findIndex(([k]) => k === atual) + 1) % TEMAS.length][0];
+  if (proximo) document.documentElement.dataset.tema = proximo; else delete document.documentElement.dataset.tema;
+  try { proximo ? localStorage.setItem("tema", proximo) : localStorage.removeItem("tema"); } catch {}
+  aplicarTema();
+  if (selecionado) desenharDetalhe();  // o gráfico guarda as cores de quando foi desenhado
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { aplicarTema(); if (selecionado) desenharDetalhe(); });
+aplicarTema();
+// Aviso de versão nova (o servidor consulta a última release no GitHub; nada é baixado sozinho)
+fetch("/api/versao-nova").then(r => r.json()).then(v => {
+  if (!v.versao) return;
+  const a = $("#aviso-versao");
+  a.href = v.url; a.textContent = `Versão ${v.versao} disponível`; a.title = "Abre a página de download no GitHub"; a.hidden = false;
+}).catch(() => {});
+// Menu ⓘ: Sobre e Créditos
+$("#btn-info").addEventListener("click", () => alternarPainel("#menu-info"));
+$("#menu-info").addEventListener("click", e => {
+  const id = e.target.closest("button")?.dataset.painel;
+  if (id && alternarPainel(id) && id === "#painel-creditos") desenharCreditos();
+});
+$("#btn-sino").addEventListener("click", async () => {
+  if (alternarPainel("#painel-alertas")) desenharPainelAlertas();
+});
+$("#painel-alertas").addEventListener("click", async e => {
+  if (e.target.id === "btn-lidos") { await api("/api/alertas/lidos", { method: "POST" }); $("#n-alertas").textContent = ""; desenharPainelAlertas(); }
+  if (e.target.id === "btn-permitir") { await pedirPermissaoNotificacao(); desenharPainelAlertas(); }
+});
+// Cronômetros (botão ⏱): o usuário inicia na mão; o servidor transforma o fim em alerta (sino + notificação).
+// Aqui só a contagem na tela, a partir do "restante" que o servidor manda.
+let cronos = [];
+const relogio = s => { const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = s % 60;
+  return (h ? h + ":" + String(m).padStart(2, "0") : m) + ":" + String(ss).padStart(2, "0"); };
+const duracaoCrono = s => { const h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60; return h && m ? `${h}h${String(m).padStart(2, "0")}` : h ? `${h}h` : `${m}min`; };
+
+async function carregarCronos() {
+  try {
+    const agora = Date.now();
+    cronos = (await api("/api/cronometros")).map(c => ({ ...c, fim: c.restante == null ? null : agora + c.restante * 1000 }));
+    desenharCronos();
+  } catch {}
+}
+function restanteCrono(c) { return c.fim == null ? null : Math.max(0, Math.round((c.fim - Date.now()) / 1000)); }
+function desenharCronos() {
+  const rodando = cronos.map(restanteCrono).filter(r => r > 0);
+  $("#btn-crono").textContent = rodando.length ? "⏱ " + relogio(Math.min(...rodando)) : "⏱";
+  $("#btn-crono").classList.toggle("rodando", rodando.length > 0);
+  if ($("#painel-cronometros").hidden) return;
+  $("#lista-cronos").innerHTML = cronos.map(c => {
+    const r = restanteCrono(c);
+    const estado = r == null ? `<span class="tempo">${duracaoCrono(c.segundos)}</span>`
+      : r > 0 ? `<span class="tempo rodando">${relogio(r)}</span>` : `<span class="tempo acabou">acabou</span>`;
+    return `<div class="crono"><span class="nome" title="${esc(c.nome)} · ${duracaoCrono(c.segundos)}">${esc(c.nome)}</span>${estado}
+      ${r > 0 ? `<button class="sec" data-crono="parar" data-id="${c.id}" title="Parar">■</button>`
+              : `<button class="sec" data-crono="iniciar" data-id="${c.id}" title="Iniciar (${duracaoCrono(c.segundos)})">▶</button>`}
+      <button class="del" data-crono="remover" data-id="${c.id}" title="Remover">✕</button></div>`;
+  }).join("") || `<div class="dica">Nenhum cronômetro. Crie um abaixo; ele fica salvo para usar de novo.</div>`;
+}
+$("#btn-crono").addEventListener("click", () => { if (alternarPainel("#painel-cronometros")) desenharCronos(); });
+$("#lista-cronos").addEventListener("click", async e => {
+  const b = e.target.closest("[data-crono]");
+  if (!b) return;
+  if (b.dataset.crono === "remover") await api(`/api/cronometros/${b.dataset.id}`, { method: "DELETE" });
+  else await api(`/api/cronometros/${b.dataset.id}/${b.dataset.crono}`, { method: "POST" });
+  carregarCronos();
+});
+$("#form-crono").addEventListener("submit", async e => {
+  e.preventDefault();
+  const segundos = (Number($("#c-h").value) || 0) * 3600 + (Number($("#c-m").value) || 0) * 60;
+  try {
+    await api("/api/cronometros", { method: "POST", body: JSON.stringify({ nome: $("#c-nome").value, segundos }) });
+    $("#c-nome").value = ""; $("#msg-crono").textContent = "";
+    carregarCronos();
+  } catch (err) { mensagem($("#msg-crono"), err.message, "erro"); }
+});
+carregarCronos();
+setInterval(desenharCronos, 1000);
+
+vigiarAlertas((naoLidos, houveNovos) => {
+  $("#n-alertas").textContent = naoLidos || "";
+  if (houveNovos && !$("#painel-alertas").hidden) desenharPainelAlertas();
+  if (houveNovos) carregarCronos();
+});
+
+// Abas: Mercado (sub-abas Preços e Farm), Pokémon (Busca, Times e Breeding) e Jogo (Quests). A escolhida fica no
+// endereço (#busca) para sobreviver ao F5; cada grupo reabre na última sub-aba usada.
+const GRUPOS = { mercado: ["precos", "farm"], pokemon: ["busca", "times", "breeding"], jogo: ["quests"] };
+const ultimaDoGrupo = { mercado: "precos", pokemon: "busca", jogo: "quests" };
+function mostrarAba(aba) {
+  if (aba === "pokemon") aba = "busca";  // nome antigo da aba
+  const grupo = Object.keys(GRUPOS).find(g => GRUPOS[g].includes(aba)) || "mercado";
+  if (!GRUPOS[grupo].includes(aba)) aba = "precos";
+  ultimaDoGrupo[grupo] = aba;
+  document.querySelectorAll(".abas button").forEach(b => b.classList.toggle("ativa", b.dataset.grupo === grupo));
+  document.querySelectorAll(".subabas button").forEach(b => b.classList.toggle("ativa", b.dataset.aba === aba));
+  for (const g of Object.keys(GRUPOS)) $("#sub-" + g).hidden = g !== grupo;
+  for (const a of Object.values(GRUPOS).flat()) $("#aba-" + a).hidden = a !== aba;
+  if (aba === "farm") abrirFarm();
+  if (aba === "quests") abrirQuests();
+  if (aba === "times") abrirTimes();
+  if (aba === "breeding") abrirBreeding();
+  if (aba === "busca") carregarPokemons().then(() => $("#busca-pokemon").focus());
+}
+function irParaAba(aba) {
+  history.replaceState(null, "", aba === "precos" ? location.pathname : "#" + aba);
+  mostrarAba(aba);
+}
+document.querySelectorAll(".abas button").forEach(b => b.addEventListener("click", () => irParaAba(ultimaDoGrupo[b.dataset.grupo])));
+document.querySelectorAll(".subabas button").forEach(b => b.addEventListener("click", () => irParaAba(b.dataset.aba)));
+mostrarAba(location.hash.slice(1));
+
+carregarItens();
+</script>
+</body>
+</html>
